@@ -124,6 +124,17 @@ tbody tr:hover td{background:var(--surface-2)}
 .mchart .vl{font:700 11px var(--f-display);fill:var(--fg)}
 .mchart .sub{font:500 10px var(--f-display);fill:var(--faint)}
 .mchart .sel{font-weight:800;fill:var(--accent)}
+.upd{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:12px 14px}
+.upd-info{display:flex;flex-direction:column;min-width:0;flex:1 1 220px}
+.upd-info b{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.upd-info span{font-weight:600;overflow-wrap:anywhere}
+.upd-act{display:flex;flex-wrap:wrap;gap:8px;align-items:center;flex:3 1 520px}
+.upd-act .btn{min-height:38px;display:inline-flex;align-items:center;font-size:13px;padding:0 14px}
+.btn.ghost{background:var(--accent-soft);color:var(--accent)}
+.search.url{flex:1 1 240px}.search.url input{width:100%;max-width:none}
+.upd-msg{flex-basis:100%;font-size:12.5px;color:var(--muted)}
+.upd-msg.err{color:var(--bad)}.upd-msg.ok{color:var(--good)}
+label.btn{cursor:pointer}
 td.mono{font-family:var(--f-mono);font-size:12px;white-space:nowrap}
 .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap}
 .p-good{background:var(--good-soft);color:var(--good)}
@@ -155,7 +166,7 @@ td.mono{font-family:var(--f-mono);font-size:12px;white-space:nowrap}
 @media (max-width:520px){.kpis{grid-template-columns:minmax(0,1fr)}.banner .desc{border-left:0;padding-left:0}.kpi .v{font-size:28px}}
 @media (prefers-reduced-motion:no-preference){.hb .t i,.arc{transition:width .35s ease,stroke-dasharray .35s ease}}
 </style>
-<style>body{margin:0}</style>
+<style>body{margin:0}[hidden]{display:none!important}</style>
 </head>
 <body>
 
@@ -171,7 +182,7 @@ td.mono{font-family:var(--f-mono);font-size:12px;white-space:nowrap}
       <a href="#rtv" id="nav-rtv"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>Return to Vendor</a>
       <a href="#detail" id="nav-det"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Data Tagihan</a>
     </nav>
-    <div class="foot">Sumber: VM_update (Google Drive), data Jan–Sep 2026<br>Hari kerja: Senin–Jumat, di luar libur nasional &amp; cuti bersama</div>
+    <div class="foot">Sumber: Google Sheets VM_update (online)<br>Hari kerja: Senin–Jumat, di luar libur nasional &amp; cuti bersama</div>
   </aside>
 
   <main>
@@ -179,6 +190,15 @@ td.mono{font-family:var(--f-mono);font-size:12px;white-space:nowrap}
       <h1>SLA DIRPEK &amp; RTV UIW NTB</h1>
       <p>Lama proses Direksi Pekerjaan dari Submission Date sampai SPTJP Approved Date (hari kerja), serta rasio dokumen Return to Vendor.</p>
     </header>
+
+    <section class="card upd" aria-label="Sumber data">
+      <div class="upd-info"><b>Sumber data</b><span id="src-lbl">Menghubungkan ke Google Sheets…</span></div>
+      <div class="upd-act" style="justify-content:flex-end;flex:0 1 auto">
+        <a class="btn ghost" id="f-open" href="https://docs.google.com/spreadsheets/d/1XLCONDcs1Afas298VVShInJrlVHdH0eQUJ27mx5IxhQ/edit" target="_blank" rel="noopener" style="text-decoration:none">Buka Google Sheets</a>
+        <button class="btn" id="f-sync" type="button">Sinkron sekarang</button>
+      </div>
+      <div class="upd-msg" id="upd-msg" role="status">Mengambil data terbaru dari Google Sheets…</div>
+    </section>
 
     <section class="card filters" aria-label="Filter">
       <div class="fld"><label for="f-bulan">Bulan SLA (SPTJP Approved)</label><select id="f-bulan"></select></div>
@@ -297,8 +317,11 @@ const RAW = [["TRE-V/7700/20260624/0000016860",1,"INVESTASI","2026-09-23","2026-
 const BA_NAME = {"7701":"UIW NTB","7711":"UP3 Mataram","7712":"UP3 Sumbawa","7713":"UP3 Bima","7714":"UP3 Selaparang","7741":"UPT Mataram","7742":"UP2B NTB","7743":"UP2D NTB","7731":"UPK Lombok","7732":"UPK Tambora","":"(BA kosong)"};
 const BLN = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 const RTV_MSG = "Update status to Return to Vendor";
-const D = RAW.map(r => ({id:r[0], ver:r[1], type:r[2], sub:r[3], appr:r[4], pihak:r[5], dp:r[6], ba:r[7], status:r[8], hk:r[9], dup:!!r[10],
-  mon:r[4].slice(0,7), rtv:r[8]===RTV_MSG, base:r[1]===1 && !r[10]}));
+const toRec = r => ({id:r[0], ver:r[1], type:r[2], sub:r[3], appr:r[4], pihak:r[5], dp:r[6], ba:r[7], status:r[8], hk:r[9], dup:!!r[10],
+  mon:r[4].slice(0,7), rtv:r[8]===RTV_MSG, base:r[1]===1 && !r[10]});
+let D = [];
+// Libur nasional + cuti bersama (SKB 3 Menteri 2025-2026). Dipakai bila file yang dimuat tidak punya sheet "Libur".
+const HOLI_DEFAULT = ["2025-12-25","2025-12-26","2026-01-01","2026-01-16","2026-02-16","2026-02-17","2026-03-18","2026-03-19","2026-03-20","2026-03-21","2026-03-22","2026-03-23","2026-03-24","2026-04-03","2026-04-05","2026-05-01","2026-05-14","2026-05-15","2026-05-27","2026-05-28","2026-05-31","2026-06-01","2026-06-16","2026-08-17","2026-08-25","2026-12-24","2026-12-25"];
 const $ = s => document.querySelector(s);
 const fmt1 = n => (Math.round(n*10)/10).toLocaleString("id-ID",{minimumFractionDigits:1,maximumFractionDigits:1});
 const pct = n => (Math.round(n*1000)/10).toLocaleString("id-ID",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
@@ -310,9 +333,89 @@ const uniq = a => [...new Set(a)].sort();
 const avg = a => a.length ? a.reduce((s,x)=>s+x,0)/a.length : 0;
 
 function fillSel(el, all, vals, lab){ el.innerHTML = `<option value="">${all}</option>` + vals.map(v=>`<option value="${esc(v)}">${esc(lab?lab(v):v)}</option>`).join(""); }
-fillSel($("#f-bulan"),"Semua bulan SLA",uniq(D.map(d=>d.mon)),monName);
-fillSel($("#f-ba"),"Semua Business Area",uniq(D.map(d=>d.ba)),baName);
-fillSel($("#f-dp"),"Semua Direksi Pekerjaan",uniq(D.map(d=>d.dp)));
+function fillAll(){
+  const keep={m:$("#f-bulan").value,b:$("#f-ba").value,p:$("#f-dp").value};
+  fillSel($("#f-bulan"),"Semua bulan SLA",uniq(D.map(d=>d.mon)),monName);
+  fillSel($("#f-ba"),"Semua Business Area",uniq(D.map(d=>d.ba)),baName);
+  fillSel($("#f-dp"),"Semua Direksi Pekerjaan",uniq(D.map(d=>d.dp)));
+  [["#f-bulan",keep.m],["#f-ba",keep.b],["#f-dp",keep.p]].forEach(([s,v])=>{ if([...$(s).options].some(o=>o.value===v)) $(s).value=v; });
+}
+fillAll();
+
+/* ---------- Pembaruan data dari file / link Google Sheets ---------- */
+const pad=n=>String(n).padStart(2,"0");
+const iso=dt=>dt.getFullYear()+"-"+pad(dt.getMonth()+1)+"-"+pad(dt.getDate());
+function parseDate(v){
+  if(v==null||v==="") return null;
+  if(v instanceof Date && !isNaN(v)) return iso(v);
+  if(typeof v==="number"){ const ms=Math.round((Math.floor(v+1e-6)-25569)*86400000); const d=new Date(ms); return d.getUTCFullYear()+"-"+pad(d.getUTCMonth()+1)+"-"+pad(d.getUTCDate()); }
+  const s=String(v).trim(); let m;
+  if(m=s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/)) return m[1]+"-"+pad(m[2])+"-"+pad(m[3]);
+  if(m=s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/)){ let a=+m[1],b=+m[2]; if(a<=12&&b>12){ [a,b]=[b,a]; } return m[3]+"-"+pad(b)+"-"+pad(a); } // dd-mm-yyyy (format Indonesia)
+  if(/^\d+(\.\d+)?$/.test(s)) return parseDate(+s);
+  const d=new Date(s); return isNaN(d)?null:iso(d);
+}
+function workdays(a,b,H){ // hari submission ikut dihitung, minimal 1
+  const s=new Date(a+"T00:00:00Z"), e=new Date(b+"T00:00:00Z"); if(e<s) return 1; let n=0;
+  for(let d=new Date(s); d<=e; d.setUTCDate(d.getUTCDate()+1)){ const w=d.getUTCDay(); if(w!==0&&w!==6&&!H.has(d.toISOString().slice(0,10))) n++; }
+  return Math.max(1,n);
+}
+const norm=s=>String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const COLS={id:"submissionid",ver:"version",type:"transactiontype",sub:"submissiondate",pihak:"pihakberkontrak",dp:"direksiperkerjaan",appr:"sptjpapproveddate",status:"statusmessage",ba:"businessarea"};
+function rowsToRaw(rows, holi){
+  if(!rows.length) throw new Error("File kosong.");
+  const hdr=rows[0].map(norm), idx={};
+  for(const [k,n] of Object.entries(COLS)){ let i=hdr.indexOf(n); if(i<0&&k==="dp") i=hdr.indexOf("direksipekerjaan"); if(i<0) throw new Error('Kolom "'+n+'" tidak ditemukan. Pastikan baris pertama berisi judul kolom seperti file VM update.'); idx[k]=i; }
+  const H=new Set(holi&&holi.length?holi:HOLI_DEFAULT), seen=new Set(), out=[]; let skip=0;
+  for(const r of rows.slice(1)){
+    const id=String(r[idx.id]??"").trim(); if(!id) continue;
+    const sub=parseDate(r[idx.sub]), appr=parseDate(r[idx.appr]); if(!sub||!appr){ skip++; continue; }
+    const ver=parseInt(r[idx.ver])||1, key=id+"|"+ver, dup=seen.has(key); seen.add(key);
+    let ba=String(r[idx.ba]??"").trim().replace(/\.0+$/,"");
+    out.push([id,ver,String(r[idx.type]??"").trim(),sub,appr,String(r[idx.pihak]??"").trim(),String(r[idx.dp]??"").trim(),ba,String(r[idx.status]??"").trim(),workdays(sub,appr,H),dup?1:0,0]);
+  }
+  if(!out.length) throw new Error("Tidak ada baris data yang bisa dibaca.");
+  return {raw:out, skip};
+}
+function parseCSV(text){
+  const rows=[]; let row=[], f="", q=false; const sep = (text.split("\n")[0].split(";").length > text.split("\n")[0].split(",").length) ? ";" : ",";
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){ f+='"'; i++; } else q=false; } else f+=c; }
+    else if(c==='"') q=true; else if(c===sep){ row.push(f); f=""; } else if(c==="\n"){ row.push(f); rows.push(row); row=[]; f=""; } else if(c!=="\r") f+=c; }
+  if(f!==""||row.length){ row.push(f); rows.push(row); }
+  return rows;
+}
+function msg(t,cls){ const m=$("#upd-msg"); m.textContent=t; m.className="upd-msg "+(cls||""); }
+function applyRaw(res, label){
+  D=res.raw.map(toRec); fillAll(); st.limit=50; render();
+  const now=new Date(); $("#src-lbl").textContent=label+" · sinkron "+now.toLocaleString("id-ID",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
+  msg(res.raw.length.toLocaleString("id-ID")+" baris dimuat; JUMLAH HARI KERJA dihitung ulang."+(res.skip?" "+res.skip+" baris dilewati karena tanggal kosong/tidak terbaca.":""),"ok");
+}
+// ---- Terhubung langsung ke Google Sheets VM_update ----
+const SHEET_ID="1XLCONDcs1Afas298VVShInJrlVHdH0eQUJ27mx5IxhQ";
+const DATA_SHEET="Sheet1", LIBUR_SHEET="Libur";
+const csvUrl=s=>"https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq?tqx=out:csv&headers=1&sheet="+encodeURIComponent(s)+"&_="+Date.now();
+async function getCsv(url){
+  const r=await fetch(url,{cache:"no-store",credentials:"omit"}); if(!r.ok) throw new Error("HTTP "+r.status);
+  const txt=await r.text(); if(/^\s*</.test(txt)) throw new Error("NOT_CSV"); return txt;
+}
+let syncing=false, loadedOnce=false;
+async function syncSheet(auto){
+  if(syncing) return; syncing=true; if(!auto) msg("Mengambil data terbaru dari Google Sheets…");
+  try{
+    const txt=await getCsv(csvUrl(DATA_SHEET));
+    let holi=null; try{ holi=parseCSV(await getCsv(csvUrl(LIBUR_SHEET))).slice(1).map(r=>parseDate(r[0])).filter(Boolean); if(!holi.length) holi=null; }catch(e){}
+    applyRaw(rowsToRaw(parseCSV(txt),holi),"Google Sheets (online)"); loadedOnce=true;
+  }catch(err){
+    const why=(err.message==="NOT_CSV"||/Failed to fetch|NetworkError|Load failed/i.test(err.message))
+      ? "Google Sheets tidak bisa dibaca. Pastikan ada internet dan file VM_update masih dibagikan \"Siapa saja yang memiliki link\" (Viewer)."
+      : "Gagal sinkron ("+err.message+").";
+    if(!loadedOnce){ D=RAW.map(toRec); fillAll(); render(); $("#src-lbl").textContent="Data cadangan (snapshot 29/09/26) · belum tersinkron"; }
+    msg(why+(loadedOnce?" Menampilkan data sinkron terakhir.":" Sementara menampilkan data cadangan."),"err");
+  }finally{ syncing=false; }
+}
+$("#f-sync").addEventListener("click",()=>syncSheet(false));
+setInterval(()=>{ if(document.visibilityState==="visible") syncSheet(true); }, 5*60*1000);
 
 const st = {g:"dp", rg:"dp", sort:{sla:["n",-1], rtv:["pct",-1], det:["hk",-1], rl:["sub",-1]}, limit:50};
 try{ const t=localStorage.getItem("sla-target-v3"); if(t!==null) $("#f-tgt").value=t; const u=localStorage.getItem("rtv-limit-v1"); if(u!==null) $("#f-rt").value=u; }catch(e){}
@@ -465,6 +568,7 @@ document.addEventListener("click",onSort);
 document.addEventListener("keydown",e=>{ if((e.key==="Enter"||e.key===" ") && e.target.matches("th[data-k]")){ e.preventDefault(); onSort(e);} });
 document.querySelectorAll(".nav a").forEach(a=>a.addEventListener("click",()=>{document.querySelectorAll(".nav a").forEach(x=>x.classList.toggle("on",x===a))}));
 render();
+syncSheet(false);
 </script>
 
 </body>
