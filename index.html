@@ -193,10 +193,6 @@ td.mono{font-family:var(--f-mono);font-size:12px;white-space:nowrap}
 
     <section class="card upd" aria-label="Sumber data">
       <div class="upd-info"><b>Sumber data</b><span id="src-lbl">Menghubungkan ke Google Sheets…</span></div>
-      <div class="upd-act" style="justify-content:flex-end;flex:0 1 auto">
-        <a class="btn ghost" id="f-open" href="https://docs.google.com/spreadsheets/d/1XLCONDcs1Afas298VVShInJrlVHdH0eQUJ27mx5IxhQ/edit" target="_blank" rel="noopener" style="text-decoration:none">Buka Google Sheets</a>
-        <button class="btn" id="f-sync" type="button">Sinkron sekarang</button>
-      </div>
       <div class="upd-msg" id="upd-msg" role="status">Mengambil data terbaru dari Google Sheets…</div>
     </section>
 
@@ -414,7 +410,6 @@ async function syncSheet(auto){
     msg(why+(loadedOnce?" Menampilkan data sinkron terakhir.":" Sementara menampilkan data cadangan."),"err");
   }finally{ syncing=false; }
 }
-$("#f-sync").addEventListener("click",()=>syncSheet(false));
 setInterval(()=>{ if(document.visibilityState==="visible") syncSheet(true); }, 5*60*1000);
 
 const st = {g:"dp", rg:"dp", sort:{sla:["n",-1], rtv:["pct",-1], det:["hk",-1], rl:["sub",-1]}, limit:50};
