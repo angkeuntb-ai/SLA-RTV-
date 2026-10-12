@@ -351,19 +351,6 @@ td.mono{font-family:var(--f-mono);font-size:12px;white-space:nowrap}
         <div><div class="lb">Lolos tanpa RTV</div><div class="v" id="r-ok">0</div><div class="s" id="r-ok-s"></div></div></div>
     </section>
 
-    <section class="card panel" id="rank">
-      <div class="tbl-head"><h3 style="margin:0">Peringkat Sub ID per Unit <small id="rk-sub"></small></h3>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-          <div class="tabs" id="rk-tabs">
-            <button class="tab on" data-g="rtv" type="button">Sub ID RTV</button>
-            <button class="tab" data-g="all" type="button">Jumlah Sub ID</button>
-          </div>
-          <div class="fld sm cmpm"><label for="f-rk">Bulan</label><select id="f-rk"></select></div>
-        </div>
-      </div>
-      <div class="tw"><table id="t-rank" class="rk"></table></div>
-      <div class="mx-leg" id="rk-leg"></div>
-    </section>
 
 
     <section class="grid2">
@@ -382,6 +369,20 @@ td.mono{font-family:var(--f-mono);font-size:12px;white-space:nowrap}
 
 
     <!-- Detail -->
+
+    <section class="card panel" id="rank">
+      <div class="tbl-head"><h3 style="margin:0">Peringkat Sub ID per Unit <small id="rk-sub"></small></h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <div class="tabs" id="rk-tabs">
+            <button class="tab on" data-g="rtv" type="button">Sub ID RTV</button>
+            <button class="tab" data-g="all" type="button">Jumlah Sub ID</button>
+          </div>
+          <div class="fld sm cmpm"><label for="f-rk">Bulan</label><select id="f-rk"></select></div>
+        </div>
+      </div>
+      <div class="tw"><table id="t-rank" class="rk"></table></div>
+      <div class="mx-leg" id="rk-leg"></div>
+    </section>
   </main>
 </div>
 <div class="mdl" id="mdl" hidden role="dialog" aria-modal="true" aria-labelledby="mdl-t">
